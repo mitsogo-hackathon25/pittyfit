@@ -18,5 +18,18 @@ class CategoryAdmin(admin.ModelAdmin):
 class ProductAdmin(admin.ModelAdmin):
     list_display = ['name', 'category', 'price', 'stock', 'featured']
     list_filter = ['category', 'featured']
+    search_fields = ['name', 'description']
     prepopulated_fields = {'slug': ('name',)}
     inlines = [ProductImageInline]
+    fieldsets = (
+        (None, {
+            'fields': ('name', 'slug', 'category', 'description'),
+        }),
+        ('Pricing & Inventory', {
+            'fields': ('price', 'stock', 'featured'),
+        }),
+        ('Media', {
+            'fields': ('image_url',),
+            'description': 'Use image_url for external images, or add images below.',
+        }),
+    )

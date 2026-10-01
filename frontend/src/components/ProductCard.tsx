@@ -30,6 +30,11 @@ export default function ProductCard({ product }: ProductCardProps) {
       <h3 className="text-sm font-medium group-hover:text-white/70 transition-colors">
         {product.name}
       </h3>
+      {product.description && (
+        <p className="text-xs text-white/45 mt-1 line-clamp-2 leading-relaxed">
+          {product.description}
+        </p>
+      )}
       <p className="text-sm font-semibold mt-1">${parseFloat(product.price).toFixed(2)}</p>
     </Link>
   );

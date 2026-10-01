@@ -17,7 +17,9 @@ export interface Product {
   featured: boolean;
   image: string;
   stock: number;
-  description?: string;
+  description: string;
+  category?: number;
+  image_url?: string;
   images?: ProductImage[];
 }
 
@@ -75,7 +77,33 @@ export interface User {
   email: string;
   first_name: string;
   last_name: string;
+  is_staff: boolean;
   profile?: Profile;
+}
+
+export interface AdminExistingImage {
+  id: number;
+  preview: string;
+  isPrimary: boolean;
+}
+
+export interface AdminNewImage {
+  file: File;
+  preview: string;
+  isPrimary: boolean;
+}
+
+export interface AdminProductFormData {
+  name: string;
+  slug?: string;
+  description: string;
+  price: string | number;
+  category: number;
+  stock: number;
+  featured: boolean;
+  existingImages: AdminExistingImage[];
+  newImages: AdminNewImage[];
+  deletedImageIds: number[];
 }
 
 export interface Profile {

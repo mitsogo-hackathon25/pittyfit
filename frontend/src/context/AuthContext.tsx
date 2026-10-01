@@ -5,7 +5,7 @@ import type { User } from '../api/types';
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
   register: (data: {
     email: string;
     password: string;
@@ -15,6 +15,7 @@ interface AuthContextType {
   }) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
+  isAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -50,6 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('refresh_token', tokens.refresh);
     const data = await getProfile();
     setUser(data.user);
+    return data.user;
   };
 
   const register = async (data: {
@@ -78,6 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         register,
         logout,
         isAuthenticated: !!user,
+        isAdmin: !!user?.is_staff,
       }}
     >
       {children}

@@ -44,6 +44,81 @@ CATEGORIES = [
     },
 ]
 
+PRODUCT_DESCRIPTIONS = {
+    'Sculpt High-Rise Leggings': (
+        'High-rise sculpting leggings with a wide waistband that stays put through squats, '
+        'lunges, and sprints. Sweat-wicking four-way stretch fabric with a smooth, compressive fit.'
+    ),
+    'Power Flex Leggings': (
+        'Built for heavy training days. Power Flex leggings deliver medium compression, '
+        'quick-dry performance, and a second-skin feel that moves with every rep.'
+    ),
+    'Seamless Core Leggings': (
+        'Minimal seams, maximum comfort. The Seamless Core legging reduces chafing during '
+        'long sessions while keeping you supported from warm-up to cool-down.'
+    ),
+    'Impact Support Bra': (
+        'High-impact support for HIIT, running, and plyometrics. Molded cups, adjustable straps, '
+        'and a secure underband keep you locked in without sacrificing breathability.'
+    ),
+    'Strappy Back Sports Bra': (
+        'A statement strappy back meets medium support. Lightweight, breathable, and designed '
+        'to layer under tanks or wear solo for studio and strength workouts.'
+    ),
+    'Light Support Bralette': (
+        'Soft, low-impact support for yoga, walking, and recovery days. Wire-free comfort '
+        'with a sleek silhouette that pairs with any Pitty Fit bottom.'
+    ),
+    'Muscle Tank': (
+        'Relaxed muscle tank with dropped armholes for airflow. Soft cotton-blend fabric '
+        'that layers easily over sports bras or wears on its own.'
+    ),
+    'Cropped Performance Tank': (
+        'Cropped length with a fitted performance cut. Moisture-wicking and quick-drying '
+        'for treadmill intervals, lifting, and everything in between.'
+    ),
+    'Racerback Tank': (
+        'Classic racerback design with a flattering fit. Lightweight fabric and a curved hem '
+        'make this an everyday training essential.'
+    ),
+    'Training Shorts': (
+        'Mid-rise training shorts with a lined inner brief and side pockets. Four-way stretch '
+        'fabric built for box jumps, sprints, and leg day.'
+    ),
+    'Biker Shorts': (
+        '7-inch inseam biker shorts with a high waist and squat-proof coverage. Smooth, '
+        'compressive fabric that stays in place through every set.'
+    ),
+    'Running Shorts': (
+        'Lightweight running shorts with a brief liner and reflective details. Quick-dry '
+        'material and an elastic waistband for miles of comfortable movement.'
+    ),
+    'Oversized Hoodie': (
+        'Oversized fit with a brushed fleece interior. Perfect for warm-ups, rest days, and '
+        'post-workout layers. Ribbed cuffs and a kangaroo pocket complete the look.'
+    ),
+    'Zip-Up Hoodie': (
+        'Full-zip hoodie with thumb holes and a fitted athletic cut. Breathable fleece '
+        'keeps you warm without overheating during outdoor training.'
+    ),
+    'Cropped Hoodie': (
+        'Cropped silhouette with a raw hem edge. Soft, heavyweight fabric for studio-to-street '
+        'style over high-rise leggings or biker shorts.'
+    ),
+    'Gym Bag': (
+        'Spacious gym bag with a shoe compartment and water-resistant base. Padded straps, '
+        'interior pockets, and room for all your training essentials.'
+    ),
+    'Resistance Bands Set': (
+        'Three-band set with light, medium, and heavy resistance levels. Ideal for glute '
+        'activation, mobility work, and adding tension to any strength routine.'
+    ),
+    'Water Bottle': (
+        '32oz stainless steel water bottle with a leak-proof lid. Double-wall insulation '
+        'keeps drinks cold through the longest sessions.'
+    ),
+}
+
 PRODUCTS = {
     'leggings': [
         ('Sculpt High-Rise Leggings', 68.00, True),
@@ -137,20 +212,25 @@ class Command(BaseCommand):
                         'category': category,
                         'price': Decimal(str(price)),
                         'featured': featured,
-                        'description': (
-                            f'{name} — engineered for performance. Premium fabric, '
-                            'four-way stretch, and a fit that moves with you through '
-                            'every rep. Built for women who demand more.'
+                        'description': PRODUCT_DESCRIPTIONS.get(
+                            name,
+                            (
+                                f'{name} — engineered for performance. Premium fabric, '
+                                'four-way stretch, and a fit that moves with you through '
+                                'every rep. Built for women who demand more.'
+                            ),
                         ),
                         'image_url': IMAGE_URLS[img_idx % len(IMAGE_URLS)],
                         'stock': 100,
                     },
                 )
-                ProductImage.objects.update_or_create(
-                    product=product,
-                    is_primary=True,
-                    defaults={'image_url': IMAGE_URLS[img_idx % len(IMAGE_URLS)]},
-                )
+                product.images.all().delete()
+                for offset in range(4):
+                    ProductImage.objects.create(
+                        product=product,
+                        image_url=IMAGE_URLS[(img_idx + offset) % len(IMAGE_URLS)],
+                        is_primary=(offset == 0),
+                    )
                 img_idx += 1
                 status = 'Created' if created else 'Updated'
                 self.stdout.write(f'  {status} product: {product.name}')

@@ -1,5 +1,6 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout';
+import AdminRoute from './components/AdminRoute';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
@@ -9,6 +10,7 @@ import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import CheckoutSuccess from './pages/CheckoutSuccess';
 import Contact from './pages/Contact';
+import Admin from './pages/Admin';
 import Home from './pages/Home';
 import Journal from './pages/Journal';
 import Login from './pages/Login';
@@ -117,6 +119,16 @@ export default function App() {
                   <ProtectedRoute>
                     <Account />
                   </ProtectedRoute>
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <Layout>
+                  <AdminRoute>
+                    <Admin />
+                  </AdminRoute>
                 </Layout>
               }
             />

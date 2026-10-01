@@ -61,7 +61,8 @@ cd backend
 python manage.py createsuperuser
 ```
 
-Visit `http://localhost:8000/admin/` to manage products, categories, testimonials, and orders.
+- **Store admin (React):** Log in with your superuser account and open `http://localhost:5173/admin` to add, edit, and delete products (name, description, price, stock, images, category, featured).
+- **Django admin:** Visit `http://localhost:8000/admin/` for full backend management (categories, orders, testimonials, etc.).
 
 ## Project Structure
 

@@ -16,7 +16,7 @@ const NAV_LINKS = [
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const { itemCount } = useCart();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isAdmin } = useAuth();
   const location = useLocation();
 
   useEffect(() => {
@@ -43,6 +43,16 @@ export default function Header() {
                 {link.label}
               </Link>
             ))}
+            {isAdmin && (
+              <Link
+                to="/admin"
+                className={`text-[11px] font-normal tracking-[0.22em] uppercase transition-colors hover:text-white ${
+                  location.pathname === '/admin' ? 'text-pitty-gold' : 'text-pitty-gold/80'
+                }`}
+              >
+                Admin
+              </Link>
+            )}
           </nav>
 
           <div className="flex items-center gap-5 z-10">
@@ -92,6 +102,14 @@ export default function Header() {
                 {link.label}
               </Link>
             ))}
+            {isAdmin && (
+              <Link
+                to="/admin"
+                className="text-sm font-medium tracking-[0.2em] uppercase text-pitty-gold hover:text-pitty-gold/80"
+              >
+                Admin
+              </Link>
+            )}
           </nav>
         </div>
       )}

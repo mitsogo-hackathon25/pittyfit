@@ -22,13 +22,14 @@ class ProductImageSerializer(serializers.ModelSerializer):
 class ProductListSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.name', read_only=True)
     category_slug = serializers.CharField(source='category.slug', read_only=True)
+    category = serializers.PrimaryKeyRelatedField(read_only=True)
     image = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
         fields = [
-            'id', 'name', 'slug', 'price', 'category_name', 'category_slug',
-            'featured', 'image', 'stock',
+            'id', 'name', 'slug', 'description', 'price', 'category', 'category_name',
+            'category_slug', 'featured', 'image', 'stock', 'image_url',
         ]
 
     def get_image(self, obj):
@@ -50,10 +51,19 @@ class ProductListSerializer(serializers.ModelSerializer):
 
 class ProductDetailSerializer(ProductListSerializer):
     images = ProductImageSerializer(many=True, read_only=True)
-    description = serializers.CharField()
 
     class Meta(ProductListSerializer.Meta):
-        fields = ProductListSerializer.Meta.fields + ['description', 'images']
+        fields = ProductListSerializer.Meta.fields + ['images']
+
+
+class ProductWriteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ['name', 'slug', 'description', 'price', 'category', 'stock', 'featured']
+        extra_kwargs = {
+            'slug': {'required': False, 'allow_blank': True},
+            'description': {'required': False, 'allow_blank': True},
+        }
 
 
 class CategorySerializer(serializers.ModelSerializer):

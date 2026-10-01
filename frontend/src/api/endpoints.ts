@@ -1,5 +1,6 @@
 import client from './client';
 import type {
+  AdminProductFormData,
   AuthTokens,
   Cart,
   Category,
@@ -72,3 +73,51 @@ export const createCheckout = (shipping: {
 
 export const subscribeNewsletter = (email: string) =>
   client.post('/newsletter/subscribe/', { email }).then((r) => r.data);
+
+export const getAdminProducts = (params?: {
+  search?: string;
+  category?: string;
+  filter?: string;
+  page?: number;
+}) =>
+  client.get<PaginatedResponse<Product>>('/admin/products/', { params }).then((r) => r.data);
+
+function buildAdminProductFormData(data: AdminProductFormData): FormData {
+  const formData = new FormData();
+  formData.append('name', data.name);
+  if (data.slug) formData.append('slug', data.slug);
+  formData.append('description', data.description);
+  formData.append('price', String(data.price));
+  formData.append('category', String(data.category));
+  formData.append('stock', String(data.stock));
+  formData.append('featured', String(data.featured));
+  formData.append('deleted_image_ids', JSON.stringify(data.deletedImageIds));
+
+  const primaryExisting = data.existingImages.find((image) => image.isPrimary);
+  const primaryNewIndex = data.newImages.findIndex((image) => image.isPrimary);
+
+  if (primaryExisting) {
+    formData.append('primary_image_id', String(primaryExisting.id));
+  } else if (primaryNewIndex >= 0) {
+    formData.append('primary_new_image_index', String(primaryNewIndex));
+  }
+
+  data.newImages.forEach((image) => {
+    formData.append('new_images', image.file);
+  });
+
+  return formData;
+}
+
+export const createAdminProduct = (data: AdminProductFormData) =>
+  client
+    .post<Product>('/admin/products/', buildAdminProductFormData(data))
+    .then((r) => r.data);
+
+export const updateAdminProduct = (id: number, data: AdminProductFormData) =>
+  client
+    .patch<Product>(`/admin/products/${id}/`, buildAdminProductFormData(data))
+    .then((r) => r.data);
+
+export const deleteAdminProduct = (id: number) =>
+  client.delete(`/admin/products/${id}/`);
