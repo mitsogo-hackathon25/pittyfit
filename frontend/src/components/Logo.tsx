@@ -1,12 +1,13 @@
 import { LOGO_IMAGE } from '../constants/images';
 
 interface LogoProps {
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'xs' | 'sm' | 'md' | 'lg';
   light?: boolean;
 }
 
 export default function Logo({ size = 'md', light = true }: LogoProps) {
   const sizes = {
+    xs: { icon: 'w-8 h-8', title: 'text-[13px]', tagline: 'text-[5px]' },
     sm: { icon: 'w-11 h-11', title: 'text-lg', tagline: 'text-[7px]' },
     md: { icon: 'w-14 h-14', title: 'text-xl', tagline: 'text-[8px]' },
     lg: { icon: 'w-16 h-16', title: 'text-2xl', tagline: 'text-[9px]' },

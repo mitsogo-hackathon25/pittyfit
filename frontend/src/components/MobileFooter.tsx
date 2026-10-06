@@ -1,13 +1,20 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { subscribeNewsletter } from '../api/endpoints';
 import Logo from './Logo';
 
-const FOOTER_LINKS = [
-  { label: 'SHOP', to: '/shop' },
-  { label: 'ABOUT', to: '/about' },
-  { label: 'JOURNAL', to: '/journal' },
-  { label: 'CONTACT', to: '/contact' },
+const QUICK_LINKS = [
+  { label: 'Home', to: '/' },
+  { label: 'Shop', to: '/shop' },
+  { label: 'About', to: '/about' },
+  { label: 'Journal', to: '/journal' },
+  { label: 'Contact', to: '/contact' },
+];
+
+const SUPPORT_LINKS = [
+  { label: 'Shipping', to: '/contact' },
+  { label: 'Returns', to: '/contact' },
+  { label: 'Size Guide', to: '/contact' },
+  { label: 'FAQs', to: '/contact' },
+  { label: 'Track Order', to: '/account' },
 ];
 
 const SOCIAL_LINKS = [
@@ -18,97 +25,68 @@ const SOCIAL_LINKS = [
   { label: 'Pinterest', href: '#' },
 ];
 
-export default function Footer() {
-  const [email, setEmail] = useState('');
-  const [message, setMessage] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  const handleSubscribe = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
-    setLoading(true);
-    try {
-      await subscribeNewsletter(email);
-      setMessage('Welcome to the crew!');
-      setEmail('');
-    } catch {
-      setMessage('Something went wrong. Try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
+export default function MobileFooter() {
   return (
-    <footer className="hidden lg:block bg-[#0a0a0a]">
-      <div className="px-6 lg:px-10 py-14">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 items-start">
-          {/* Logo */}
-          <div className="flex justify-center md:justify-start">
-            <Logo size="md" />
+    <footer className="lg:hidden bg-[#0a0a0a] border-t border-white/10">
+      <div className="px-6 pt-12 pb-10">
+        <div className="flex flex-col items-center mb-10">
+          <Logo size="md" />
+          <div className="flex gap-5 mt-6">
+            {SOCIAL_LINKS.map((social) => (
+              <a
+                key={social.label}
+                href={social.href}
+                className="text-white/45 hover:text-white transition-colors"
+                aria-label={social.label}
+              >
+                <SocialIcon name={social.label} />
+              </a>
+            ))}
           </div>
+        </div>
 
-          {/* Nav + Social */}
-          <div className="flex flex-col items-center gap-6">
-            <nav className="flex flex-wrap justify-center gap-6 sm:gap-8">
-              {FOOTER_LINKS.map((link) => (
+        <div className="grid grid-cols-2 gap-8 max-w-sm mx-auto">
+          <div>
+            <p className="text-[10px] tracking-[0.2em] uppercase text-white/40 mb-4">
+              Quick Links
+            </p>
+            <nav className="flex flex-col gap-2.5">
+              {QUICK_LINKS.map((link) => (
                 <Link
                   key={link.to}
                   to={link.to}
-                  className="text-[10px] tracking-[0.2em] uppercase text-white/55 hover:text-white transition-colors"
+                  className="text-[12px] text-white/55 hover:text-white transition-colors"
                 >
                   {link.label}
                 </Link>
               ))}
             </nav>
-            <div className="flex gap-5">
-              {SOCIAL_LINKS.map((social) => (
-                <a
-                  key={social.label}
-                  href={social.href}
-                  className="text-white/45 hover:text-white transition-colors"
-                  aria-label={social.label}
-                >
-                  <SocialIcon name={social.label} />
-                </a>
-              ))}
-            </div>
           </div>
-
-          {/* Newsletter */}
-          <div className="flex flex-col items-center md:items-end">
-            <p className="text-[10px] tracking-[0.18em] uppercase text-white/55 mb-4 text-center md:text-right">
-              Join the Pitty Fit Crew
+          <div>
+            <p className="text-[10px] tracking-[0.2em] uppercase text-white/40 mb-4">
+              Support
             </p>
-            <form onSubmit={handleSubscribe} className="flex w-full max-w-xs border border-white/20">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Your email"
-                className="flex-1 bg-[#1a1a1a] px-4 py-2.5 text-sm text-white placeholder-white/30 outline-none"
-                required
-              />
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-4 text-white hover:bg-white/10 transition-colors border-l border-white/20"
-              >
-                →
-              </button>
-            </form>
-            {message && (
-              <p className="text-xs text-pitty-gold mt-2">{message}</p>
-            )}
+            <nav className="flex flex-col gap-2.5">
+              {SUPPORT_LINKS.map((link) => (
+                <Link
+                  key={link.label}
+                  to={link.to}
+                  className="text-[12px] text-white/55 hover:text-white transition-colors"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
           </div>
         </div>
       </div>
 
       <div className="border-t border-white/10">
-        <div className="px-6 lg:px-10 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="px-6 py-5 flex flex-col items-center gap-3">
           <p className="text-[10px] text-white/35 tracking-wide">
             © 2025 PITTY FIT. All rights reserved.
           </p>
-          <div className="flex gap-4 text-[10px] tracking-[0.18em] uppercase text-white/35">
+          <div className="flex gap-3 text-[9px] tracking-[0.18em] uppercase text-white/35">
             <span>Discipline</span>
             <span>/</span>
             <span>Consistency</span>

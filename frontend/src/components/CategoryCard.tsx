@@ -3,9 +3,10 @@ import type { Category } from '../api/types';
 
 interface CategoryCardProps {
   category: Category;
+  mobile?: boolean;
 }
 
-export default function CategoryCard({ category }: CategoryCardProps) {
+export default function CategoryCard({ category, mobile = false }: CategoryCardProps) {
   const image = `/images/categories/${category.slug}.jpg`;
 
   return (
@@ -24,7 +25,7 @@ export default function CategoryCard({ category }: CategoryCardProps) {
 
       <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/85 via-black/40 to-transparent pointer-events-none" />
 
-      <div className="absolute bottom-0 left-0 right-0 px-4 pb-4 sm:px-5 sm:pb-5">
+      <div className={`absolute bottom-0 left-0 right-0 px-4 pb-4 sm:px-5 sm:pb-5${mobile ? ' text-center' : ''}`}>
         <span className="text-[10px] sm:text-[11px] font-semibold tracking-[0.2em] uppercase text-white group-hover:text-white/80 transition-colors">
           {category.name} →
         </span>

@@ -2,6 +2,15 @@ export const HERO_IMAGE = '/images/hero.png';
 export const LOGO_IMAGE = '/images/logo.png';
 
 export const SIGNATURE_BANNER = '/images/signature-banner.jpg';
+export const SIGNATURE_LEFT = '/images/signature-left.jpg';
+
+/** Static local images for the Follow the Movement grid (not admin-managed) */
+export const INSTAGRAM_IMAGES = [
+  '/images/signature-left.jpg',
+  '/images/signature-right.jpg',
+  '/images/categories/leggings.jpg',
+  '/images/categories/sports-bras.jpg',
+];
 
 /** Product-style shots for category tiles — centered on dark tile backgrounds */
 export const CATEGORY_IMAGES: Record<string, string> = {
