@@ -1,4 +1,7 @@
-export const HERO_IMAGE = '/images/hero.png';
+export const HERO_IMAGE = '/images/hero.jpg';
+export const HERO_IMAGE_2X = '/images/hero-2x.jpg';
+export const HERO_IMAGE_MOBILE = '/images/hero-mobile.jpg';
+export const HERO_IMAGE_DESKTOP = '/images/hero-desktop.jpg';
 export const LOGO_IMAGE = '/images/logo.png';
 
 export const SIGNATURE_BANNER = '/images/signature-banner.jpg';

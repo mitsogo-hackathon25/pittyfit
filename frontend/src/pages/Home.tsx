@@ -11,7 +11,13 @@ import MobileTestimonialCard from '../components/MobileTestimonialCard';
 import NewsletterSection from '../components/NewsletterSection';
 import TestimonialCard from '../components/TestimonialCard';
 import TrustBar from '../components/TrustBar';
-import { HERO_IMAGE, SIGNATURE_BANNER, SIGNATURE_LEFT } from '../constants/images';
+import {
+  HERO_IMAGE_2X,
+  HERO_IMAGE_DESKTOP,
+  HERO_IMAGE_MOBILE,
+  SIGNATURE_BANNER,
+  SIGNATURE_LEFT,
+} from '../constants/images';
 
 export default function Home() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -30,24 +36,30 @@ export default function Home() {
     <>
       {/* ─── Mobile homepage (< lg) ─── */}
       <div className="lg:hidden overflow-x-hidden">
-        <section className="relative w-full overflow-hidden h-[68vh] min-h-[400px] max-h-[560px] flex items-start">
-          <div className="absolute inset-0">
+        <section className="relative w-full overflow-hidden h-[72vh] min-h-[420px] max-h-[580px] flex items-center">
+          <div className="absolute inset-0 overflow-hidden bg-black">
             <img
-              src={HERO_IMAGE}
-              alt="Athlete training"
-              className="w-full h-full object-cover object-[70%_15%]"
+              src={HERO_IMAGE_MOBILE}
+              srcSet={`${HERO_IMAGE_MOBILE} 1454w, ${HERO_IMAGE_2X} 2170w`}
+              sizes="100vw"
+              alt="PITTY FIT athlete in gym"
+              width={1454}
+              height={725}
+              className="absolute inset-0 h-full w-full object-cover object-[56%_36%]"
+              fetchPriority="high"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/65 to-black/25" />
+            <div className="absolute inset-y-0 left-0 z-[1] w-[68%] bg-gradient-to-r from-black/90 via-black/55 to-transparent pointer-events-none" />
+            <div className="absolute inset-0 z-[1] bg-gradient-to-t from-black/25 via-transparent to-transparent pointer-events-none" />
           </div>
-          <div className="relative z-10 w-full px-5 pt-8 pb-6">
-            <div className="max-w-[260px] animate-fade-in-up">
-              <p className="text-[9px] tracking-[0.26em] uppercase text-white/60 mb-3">
+          <div className="relative z-10 w-full px-5 py-6">
+            <div className="max-w-[260px] animate-fade-in-up [text-shadow:0_2px_12px_rgba(0,0,0,0.85)]">
+              <p className="text-[9px] tracking-[0.26em] uppercase text-white mb-3">
                 More than a brand
               </p>
-              <h1 className="text-[1.75rem] font-black uppercase tracking-[0.01em] leading-[1.08] mb-3">
+              <h1 className="text-[1.75rem] font-black uppercase tracking-[0.01em] leading-[1.08] mb-3 text-white">
                 It&apos;s a Mindset
               </h1>
-              <p className="text-[9px] tracking-[0.18em] uppercase text-white/70 leading-relaxed mb-6 max-w-[220px]">
+              <p className="text-[9px] tracking-[0.18em] uppercase text-white/90 leading-relaxed mb-6 max-w-[220px]">
                 Discipline builds the strongest women
               </p>
               <Button to="/shop" variant="solid" className="px-7 py-3 text-[10px]">
@@ -168,24 +180,29 @@ export default function Home() {
       {/* ─── Desktop homepage (≥ lg) — exact original ─── */}
       <div className="hidden lg:block">
         <section className="relative h-[88vh] min-h-[560px] max-h-[900px] flex items-center">
-          <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-black">
             <img
-              src={HERO_IMAGE}
-              alt="Athlete training"
-              className="w-full h-full object-cover object-right"
+              src={HERO_IMAGE_DESKTOP}
+              srcSet={`${HERO_IMAGE_DESKTOP} 1920w, ${HERO_IMAGE_2X} 2170w`}
+              sizes="100vw"
+              alt="PITTY FIT athlete in gym"
+              width={1920}
+              height={641}
+              className="w-full h-full object-cover object-[62%_center]"
+              fetchPriority="high"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-transparent" />
+            <div className="absolute inset-y-0 left-0 w-[58%] bg-gradient-to-r from-black/85 via-black/45 to-transparent pointer-events-none" />
           </div>
 
           <div className="relative z-10 w-full px-6 lg:px-16">
             <div className="max-w-xl animate-fade-in-up">
-              <p className="text-[11px] tracking-[0.28em] uppercase text-white/65 mb-5">
+              <p className="text-[11px] tracking-[0.28em] uppercase text-white mb-5">
                 More than a brand
               </p>
-              <h1 className="text-[2.75rem] sm:text-6xl lg:text-[4.5rem] font-black uppercase tracking-[0.02em] leading-[0.95] mb-5">
+              <h1 className="text-[2.75rem] sm:text-6xl lg:text-[4.5rem] font-black uppercase tracking-[0.02em] leading-[0.95] mb-5 text-white">
                 It&apos;s a Mindset
               </h1>
-              <p className="text-[11px] sm:text-xs tracking-[0.22em] uppercase text-white/75 mb-10">
+              <p className="text-[11px] sm:text-xs tracking-[0.22em] uppercase text-white/90 mb-10">
                 Discipline builds the strongest women
               </p>
               <Button to="/shop" variant="ghost">
