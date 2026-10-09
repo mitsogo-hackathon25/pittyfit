@@ -35,10 +35,10 @@ cd backend
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py seed_demo_data
-python manage.py runserver 8001
+python manage.py runserver 8002
 ```
 
-The API runs at `http://localhost:8001/api/` (port 8001 avoids conflicts with other local Django projects on 8000).
+The API runs at `http://localhost:8002/api/` (use **8002** if another Django app is already on 8000/8001).
 
 Optional: copy `.env.example` to `.env` and add Stripe keys for live checkout.
 
@@ -62,7 +62,7 @@ python manage.py createsuperuser
 ```
 
 - **Store admin (React):** Log in with your superuser account and open `http://localhost:5173/admin` to add, edit, and delete products (name, description, price, stock, images, category, featured).
-- **Django admin:** Visit `http://localhost:8001/admin/` for full backend management (categories, orders, testimonials, etc.).
+- **Django admin:** Visit `http://localhost:8002/admin/` for full backend management (categories, orders, testimonials, etc.).
 
 ## Project Structure
 

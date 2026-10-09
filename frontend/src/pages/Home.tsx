@@ -40,10 +40,10 @@ export default function Home() {
           <div className="absolute inset-0 overflow-hidden bg-black">
             <img
               src={HERO_IMAGE_MOBILE}
-              srcSet={`${HERO_IMAGE_MOBILE} 1454w, ${HERO_IMAGE_2X} 2170w`}
+              srcSet={`${HERO_IMAGE_MOBILE} 1476w, ${HERO_IMAGE_2X} 2170w`}
               sizes="100vw"
               alt="PITTY FIT athlete in gym"
-              width={1454}
+              width={1476}
               height={725}
               className="absolute inset-0 h-full w-full object-cover object-[56%_36%]"
               fetchPriority="high"
@@ -225,7 +225,7 @@ export default function Home() {
           </div>
 
           <div className="px-2 sm:px-3 lg:px-4">
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-[2px] sm:gap-[3px]">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-[2px] sm:gap-[3px]">
               {categories.map((category) => (
                 <CategoryCard key={category.id} category={category} />
               ))}

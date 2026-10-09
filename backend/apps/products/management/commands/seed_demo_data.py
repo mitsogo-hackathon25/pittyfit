@@ -7,40 +7,28 @@ from apps.reviews.models import Testimonial
 
 CATEGORIES = [
     {
-        'name': 'Leggings',
-        'slug': 'leggings',
+        'name': 'Women',
+        'slug': 'women',
         'order': 1,
-        'image_url': 'https://images.unsplash.com/photo-1506629082955-511b1aa562c8?w=500&h=700&fit=crop&q=80',
+        'image_url': '',
     },
     {
-        'name': 'Sports Bras',
-        'slug': 'sports-bras',
+        'name': 'Men',
+        'slug': 'men',
         'order': 2,
-        'image_url': 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=500&h=700&fit=crop&q=80',
-    },
-    {
-        'name': 'Tank Tops',
-        'slug': 'tank-tops',
-        'order': 3,
-        'image_url': 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=500&h=700&fit=crop&q=80',
-    },
-    {
-        'name': 'Shorts',
-        'slug': 'shorts',
-        'order': 4,
-        'image_url': 'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=500&h=700&fit=crop&q=80',
-    },
-    {
-        'name': 'Hoodies',
-        'slug': 'hoodies',
-        'order': 5,
-        'image_url': 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=500&h=700&fit=crop&q=80',
+        'image_url': '',
     },
     {
         'name': 'Accessories',
         'slug': 'accessories',
-        'order': 6,
-        'image_url': 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=500&h=700&fit=crop&q=80',
+        'order': 3,
+        'image_url': '',
+    },
+    {
+        'name': 'Supplements',
+        'slug': 'supplements',
+        'order': 4,
+        'image_url': '',
     },
 ]
 
@@ -120,35 +108,25 @@ PRODUCT_DESCRIPTIONS = {
 }
 
 PRODUCTS = {
-    'leggings': [
+    'women': [
         ('Sculpt High-Rise Leggings', 68.00, True),
-        ('Power Flex Leggings', 72.00, False),
+        ('Impact Support Bra', 48.00, True),
         ('Seamless Core Leggings', 65.00, True),
     ],
-    'sports-bras': [
-        ('Impact Support Bra', 48.00, True),
-        ('Strappy Back Sports Bra', 52.00, False),
-        ('Light Support Bralette', 42.00, False),
-    ],
-    'tank-tops': [
-        ('Muscle Tank', 38.00, False),
-        ('Cropped Performance Tank', 45.00, True),
-        ('Racerback Tank', 40.00, False),
-    ],
-    'shorts': [
-        ('Training Shorts', 55.00, True),
-        ('Biker Shorts', 58.00, False),
-        ('Running Shorts', 50.00, False),
-    ],
-    'hoodies': [
+    'men': [
+        ('Performance Tee', 42.00, True),
+        ('Training Shorts', 55.00, False),
         ('Oversized Hoodie', 78.00, True),
-        ('Zip-Up Hoodie', 85.00, False),
-        ('Cropped Hoodie', 72.00, False),
     ],
     'accessories': [
         ('Gym Bag', 45.00, False),
         ('Resistance Bands Set', 28.00, True),
         ('Water Bottle', 22.00, False),
+    ],
+    'supplements': [
+        ('Whey Protein', 54.00, True),
+        ('Pre-Workout', 39.00, True),
+        ('Creatine Monohydrate', 29.00, False),
     ],
 }
 
@@ -191,6 +169,11 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         self.stdout.write('Seeding demo data...')
+
+        keep_slugs = {cat['slug'] for cat in CATEGORIES}
+        removed, _ = Category.objects.exclude(slug__in=keep_slugs).delete()
+        if removed:
+            self.stdout.write(f'  Removed {removed} stale category-related row(s)')
 
         categories = {}
         for cat_data in CATEGORIES:
