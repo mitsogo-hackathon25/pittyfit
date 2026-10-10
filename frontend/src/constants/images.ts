@@ -5,6 +5,8 @@ export const HERO_IMAGE_DESKTOP = '/images/hero-desktop.jpg';
 export const LOGO_IMAGE = '/images/logo.png';
 
 export const SIGNATURE_BANNER = '/images/signature-banner.png';
+/** Mobile signature split — left athlete only (from banner) */
+export const SIGNATURE_MOBILE_LEFT = '/images/signature-mobile-left.png';
 export const SIGNATURE_LEFT = '/images/signature-left.jpg';
 
 /** Static local images for the Follow the Movement grid (not admin-managed) */

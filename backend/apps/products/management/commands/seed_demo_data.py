@@ -3,8 +3,6 @@ from decimal import Decimal
 from django.core.management.base import BaseCommand
 
 from apps.products.models import Category, Product, ProductImage
-from apps.reviews.models import Testimonial
-
 CATEGORIES = [
     {
         'name': 'Women',
@@ -130,30 +128,6 @@ PRODUCTS = {
     ],
 }
 
-TESTIMONIALS = [
-    {
-        'name': 'Sarah L.',
-        'quote': 'The quality is unmatched. These leggings stay in place through every squat and sprint. I finally found gear that matches my intensity.',
-        'rating': 5,
-        'avatar_url': 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop',
-        'order': 1,
-    },
-    {
-        'name': 'Maya R.',
-        'quote': 'Pitty Fit changed how I show up to the gym. The fit is incredible and the brand message keeps me motivated every single day.',
-        'rating': 5,
-        'avatar_url': 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
-        'order': 2,
-    },
-    {
-        'name': 'Jessica K.',
-        'quote': 'Finally, activewear designed for women who train hard. Premium feel, bold style, and built to last. Obsessed with my entire order.',
-        'rating': 5,
-        'avatar_url': 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop',
-        'order': 3,
-    },
-]
-
 IMAGE_URLS = [
     'https://images.unsplash.com/photo-1518310383802-640c2b311c37?w=600&h=800&fit=crop',
     'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=600&h=800&fit=crop',
@@ -165,7 +139,7 @@ IMAGE_URLS = [
 
 
 class Command(BaseCommand):
-    help = 'Seed demo categories, products, and testimonials'
+    help = 'Seed demo categories and products'
 
     def handle(self, *args, **options):
         self.stdout.write('Seeding demo data...')
@@ -217,13 +191,5 @@ class Command(BaseCommand):
                 img_idx += 1
                 status = 'Created' if created else 'Updated'
                 self.stdout.write(f'  {status} product: {product.name}')
-
-        for t_data in TESTIMONIALS:
-            testimonial, created = Testimonial.objects.update_or_create(
-                name=t_data['name'],
-                defaults={**t_data, 'is_featured': True},
-            )
-            status = 'Created' if created else 'Updated'
-            self.stdout.write(f'  {status} testimonial: {testimonial.name}')
 
         self.stdout.write(self.style.SUCCESS('Demo data seeded successfully!'))

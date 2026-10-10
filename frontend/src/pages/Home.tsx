@@ -1,35 +1,26 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getCategories, getProducts, getTestimonials } from '../api/endpoints';
-import type { Category, Product, Testimonial } from '../api/types';
+import { getCategories } from '../api/endpoints';
+import type { Category } from '../api/types';
 import BrandValues from '../components/BrandValues';
 import Button from '../components/Button';
 import CategoryCard from '../components/CategoryCard';
-import FeaturedProductCard from '../components/FeaturedProductCard';
 import InstagramFeed from '../components/InstagramFeed';
-import MobileTestimonialCard from '../components/MobileTestimonialCard';
 import NewsletterSection from '../components/NewsletterSection';
-import TestimonialCard from '../components/TestimonialCard';
 import TrustBar from '../components/TrustBar';
 import {
   HERO_IMAGE_2X,
   HERO_IMAGE_DESKTOP,
   HERO_IMAGE_MOBILE,
   SIGNATURE_BANNER,
-  SIGNATURE_LEFT,
+  SIGNATURE_MOBILE_LEFT,
 } from '../constants/images';
 
 export default function Home() {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
-  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
 
   useEffect(() => {
     getCategories().then(setCategories).catch(console.error);
-    getTestimonials().then(setTestimonials).catch(console.error);
-    getProducts({ featured: true })
-      .then((data) => setFeaturedProducts(data.results.slice(0, 6)))
-      .catch(console.error);
   }, []);
 
   return (
@@ -56,12 +47,9 @@ export default function Home() {
               <p className="text-[9px] tracking-[0.26em] uppercase text-white mb-3">
                 More than a brand
               </p>
-              <h1 className="text-[1.75rem] font-black uppercase tracking-[0.01em] leading-[1.08] mb-3 text-white">
+              <h1 className="text-[1.75rem] font-black uppercase tracking-[0.01em] leading-[1.08] mb-6 text-white">
                 It&apos;s a Mindset
               </h1>
-              <p className="text-[9px] tracking-[0.18em] uppercase text-white/90 leading-relaxed mb-6 max-w-[220px]">
-                Discipline builds the strongest women
-              </p>
               <Button to="/shop" variant="solid" className="px-7 py-3 text-[10px]">
                 Shop Now →
               </Button>
@@ -114,9 +102,9 @@ export default function Home() {
 
         <section className="relative bg-black grid grid-cols-2 min-h-[300px]">
           <img
-            src={SIGNATURE_LEFT}
+            src={SIGNATURE_MOBILE_LEFT}
             alt="Signature collection"
-            className="w-full h-full object-cover object-center"
+            className="block w-full h-full min-h-[300px] object-cover object-[40%_center]"
           />
           <div className="bg-[#111111] flex flex-col justify-center px-4 py-6">
             <h2 className="font-serif text-[13px] font-bold uppercase tracking-[0.03em] leading-tight mb-3">
@@ -134,44 +122,7 @@ export default function Home() {
           </div>
         </section>
 
-        {featuredProducts.length > 0 && (
-          <section className="bg-black py-10">
-            <div className="flex items-end justify-between px-5 mb-6">
-              <div>
-                <p className="text-[9px] tracking-[0.28em] uppercase text-white/40 mb-1.5">
-                  Featured Collection
-                </p>
-                <h2 className="font-serif text-xl font-bold uppercase tracking-[0.04em]">
-                  Best Sellers
-                </h2>
-              </div>
-              <Link
-                to="/shop"
-                className="text-[9px] tracking-[0.18em] uppercase text-white/55 hover:text-white transition-colors whitespace-nowrap"
-              >
-                View All →
-              </Link>
-            </div>
-            <div className="flex gap-4 overflow-x-auto px-5 pb-2 scrollbar-hide">
-              {featuredProducts.map((product) => (
-                <FeaturedProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          </section>
-        )}
-
         <BrandValues />
-
-        <section className="bg-black py-12">
-          <h2 className="text-center text-[9px] tracking-[0.28em] uppercase text-white/45 mb-10">
-            Real Women. Real Results.
-          </h2>
-          <div className="flex flex-col gap-6 px-5 max-w-md mx-auto">
-            {testimonials.map((t) => (
-              <MobileTestimonialCard key={t.id} testimonial={t} />
-            ))}
-          </div>
-        </section>
 
         <InstagramFeed />
         <NewsletterSection />
@@ -199,12 +150,9 @@ export default function Home() {
               <p className="text-[11px] tracking-[0.28em] uppercase text-white mb-5">
                 More than a brand
               </p>
-              <h1 className="text-[2.75rem] sm:text-6xl lg:text-[4.5rem] font-black uppercase tracking-[0.02em] leading-[0.95] mb-5 text-white">
+              <h1 className="text-[2.75rem] sm:text-6xl lg:text-[4.5rem] font-black uppercase tracking-[0.02em] leading-[0.95] mb-10 text-white">
                 It&apos;s a Mindset
               </h1>
-              <p className="text-[11px] sm:text-xs tracking-[0.22em] uppercase text-white/90 mb-10">
-                Discipline builds the strongest women
-              </p>
               <Button to="/shop" variant="ghost">
                 Shop Now →
               </Button>
@@ -263,17 +211,6 @@ export default function Home() {
             </div>
 
             <div aria-hidden="true" />
-          </div>
-        </section>
-
-        <section className="bg-black py-16 sm:py-20">
-          <h2 className="text-center text-[10px] tracking-[0.28em] uppercase text-white/45 mb-14 sm:mb-16">
-            Real Women. Real Results.
-          </h2>
-          <div className="grid grid-cols-3 gap-6 max-w-5xl mx-auto px-6">
-            {testimonials.map((t) => (
-              <TestimonialCard key={t.id} testimonial={t} />
-            ))}
           </div>
         </section>
       </div>
