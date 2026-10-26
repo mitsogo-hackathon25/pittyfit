@@ -93,6 +93,21 @@ function buildAdminProductFormData(data: AdminProductFormData): FormData {
   formData.append('featured', String(data.featured));
   formData.append('deleted_image_ids', JSON.stringify(data.deletedImageIds));
 
+  const clearedSlots = Object.entries(data.showcaseSlots)
+    .filter(([, slot]) => slot.clearExisting && slot.existingImageId)
+    .map(([key]) => key);
+  formData.append('cleared_showcase_slots', JSON.stringify(clearedSlots));
+
+  Object.entries(data.showcaseSlots).forEach(([slotKey, slot]) => {
+    if (slot.pendingFile) {
+      formData.append(`showcase_${slotKey}`, slot.pendingFile);
+    }
+  });
+
+  if (data.primaryShowcaseSlot) {
+    formData.append('primary_showcase_slot', data.primaryShowcaseSlot);
+  }
+
   const primaryExisting = data.existingImages.find((image) => image.isPrimary);
   const primaryNewIndex = data.newImages.findIndex((image) => image.isPrimary);
 

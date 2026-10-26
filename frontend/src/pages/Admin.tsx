@@ -7,26 +7,46 @@ import {
   getCategories,
   updateAdminProduct,
 } from '../api/endpoints';
-import type { AdminProductFormData, Category, Product } from '../api/types';
+import type { AdminProductFormData, Category, Product, ShowcaseSlotFormState } from '../api/types';
+import AdminShowcaseSections from '../components/AdminShowcaseSections';
 import Button from '../components/Button';
+import { createEmptyShowcaseSlotState } from '../constants/showcaseSlots';
 
 const ADMIN_PAGE_SIZE = 25;
 
-const EMPTY_FORM: AdminProductFormData = {
-  name: '',
-  slug: '',
-  description: '',
-  price: '',
-  category: 0,
-  stock: 100,
-  featured: false,
-  existingImages: [],
-  newImages: [],
-  deletedImageIds: [],
-};
+function createEmptyForm(categoryId = 0): AdminProductFormData {
+  return {
+    name: '',
+    slug: '',
+    description: '',
+    price: '',
+    category: categoryId,
+    stock: 100,
+    featured: false,
+    showcaseSlots: createEmptyShowcaseSlotState(),
+    primaryShowcaseSlot: 'model_0',
+    existingImages: [],
+    newImages: [],
+    deletedImageIds: [],
+  };
+}
 
 function revokePreviewUrls(images: AdminProductFormData['newImages']) {
   images.forEach((image) => URL.revokeObjectURL(image.preview));
+}
+
+function revokeShowcasePreviews(slots: Record<string, ShowcaseSlotFormState>) {
+  Object.values(slots).forEach((slot) => {
+    if (slot.pendingFile && slot.preview?.startsWith('blob:')) {
+      URL.revokeObjectURL(slot.preview);
+    }
+  });
+}
+
+function hasFilledShowcaseSlot(slots: Record<string, ShowcaseSlotFormState>) {
+  return Object.values(slots).some(
+    (slot) => Boolean(slot.pendingFile) || Boolean(slot.preview && !slot.clearExisting),
+  );
 }
 
 export default function Admin() {
@@ -42,7 +62,7 @@ export default function Admin() {
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState<AdminProductFormData>(EMPTY_FORM);
+  const [form, setForm] = useState<AdminProductFormData>(() => createEmptyForm());
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -92,21 +112,16 @@ export default function Admin() {
 
   const closeForm = () => {
     revokePreviewUrls(form.newImages);
+    revokeShowcasePreviews(form.showcaseSlots);
     setShowForm(false);
     setEditingId(null);
-    setForm({
-      ...EMPTY_FORM,
-      category: categories[0]?.id ?? 0,
-    });
+    setForm(createEmptyForm(categories[0]?.id ?? 0));
     setError('');
   };
 
   const openAddForm = () => {
     setEditingId(null);
-    setForm({
-      ...EMPTY_FORM,
-      category: categories[0]?.id ?? 0,
-    });
+    setForm(createEmptyForm(categories[0]?.id ?? 0));
     setError('');
     setSuccess('');
     setShowForm(true);
@@ -114,7 +129,32 @@ export default function Admin() {
 
   const startEdit = (product: Product) => {
     revokePreviewUrls(form.newImages);
+    revokeShowcasePreviews(form.showcaseSlots);
     setEditingId(product.id);
+
+    const showcaseSlots = createEmptyShowcaseSlotState();
+    let primaryShowcaseSlot = 'model_0';
+    const existingImages: AdminProductFormData['existingImages'] = [];
+
+    product.images?.forEach((img) => {
+      if (img.showcase_slot && showcaseSlots[img.showcase_slot]) {
+        showcaseSlots[img.showcase_slot] = {
+          existingImageId: img.id,
+          preview: img.image,
+          clearExisting: false,
+        };
+        if (img.is_primary) {
+          primaryShowcaseSlot = img.showcase_slot;
+        }
+      } else {
+        existingImages.push({
+          id: img.id,
+          preview: img.image,
+          isPrimary: img.is_primary,
+        });
+      }
+    });
+
     setForm({
       name: product.name,
       slug: product.slug,
@@ -123,11 +163,9 @@ export default function Admin() {
       category: product.category ?? categories[0]?.id ?? 0,
       stock: product.stock,
       featured: product.featured,
-      existingImages: product.images?.map((img) => ({
-        id: img.id,
-        preview: img.image,
-        isPrimary: img.is_primary,
-      })) ?? [],
+      showcaseSlots,
+      primaryShowcaseSlot,
+      existingImages,
       newImages: [],
       deletedImageIds: [],
     });
@@ -136,46 +174,55 @@ export default function Admin() {
     setShowForm(true);
   };
 
-  const handleNewImageUpload = (files: FileList | null) => {
-    if (!files?.length) return;
-
-    const uploaded = Array.from(files).map((file) => ({
-      file,
-      preview: URL.createObjectURL(file),
-      isPrimary: false,
-    }));
-
+  const handleShowcaseUpload = (slotKey: string, file: File) => {
     setForm((prev) => {
-      const needsPrimary = !prev.existingImages.some((image) => image.isPrimary)
-        && !prev.newImages.some((image) => image.isPrimary);
-      const newImages = [...prev.newImages, ...uploaded];
-      if (needsPrimary && newImages.length > 0) {
-        newImages[0].isPrimary = true;
+      const current = prev.showcaseSlots[slotKey];
+      if (current?.preview?.startsWith('blob:')) {
+        URL.revokeObjectURL(current.preview);
       }
-      return { ...prev, newImages };
+
+      const showcaseSlots = {
+        ...prev.showcaseSlots,
+        [slotKey]: {
+          existingImageId: current?.existingImageId,
+          preview: URL.createObjectURL(file),
+          pendingFile: file,
+          clearExisting: false,
+        },
+      };
+
+      const hasPrimary = Object.entries(showcaseSlots).some(([key, slot]) => {
+        if (key !== prev.primaryShowcaseSlot) return false;
+        return Boolean(slot.pendingFile) || Boolean(slot.preview && !slot.clearExisting);
+      });
+
+      return {
+        ...prev,
+        showcaseSlots,
+        primaryShowcaseSlot: hasPrimary ? prev.primaryShowcaseSlot : slotKey,
+      };
     });
   };
 
-  const setPrimaryExistingImage = (imageId: number) => {
-    setForm((prev) => ({
-      ...prev,
-      existingImages: prev.existingImages.map((image) => ({
-        ...image,
-        isPrimary: image.id === imageId,
-      })),
-      newImages: prev.newImages.map((image) => ({ ...image, isPrimary: false })),
-    }));
-  };
+  const handleShowcaseClear = (slotKey: string) => {
+    setForm((prev) => {
+      const current = prev.showcaseSlots[slotKey];
+      if (current?.preview?.startsWith('blob:')) {
+        URL.revokeObjectURL(current.preview);
+      }
 
-  const setPrimaryNewImage = (index: number) => {
-    setForm((prev) => ({
-      ...prev,
-      existingImages: prev.existingImages.map((image) => ({ ...image, isPrimary: false })),
-      newImages: prev.newImages.map((image, i) => ({
-        ...image,
-        isPrimary: i === index,
-      })),
-    }));
+      const showcaseSlots = {
+        ...prev.showcaseSlots,
+        [slotKey]: {
+          existingImageId: current?.existingImageId,
+          preview: null,
+          pendingFile: undefined,
+          clearExisting: Boolean(current?.existingImageId),
+        },
+      };
+
+      return { ...prev, showcaseSlots };
+    });
   };
 
   const removeExistingImage = (imageId: number) => {
@@ -195,30 +242,6 @@ export default function Admin() {
         existingImages: remaining,
         deletedImageIds,
       };
-    });
-  };
-
-  const removeNewImage = (index: number) => {
-    setForm((prev) => {
-      const target = prev.newImages[index];
-      if (target) URL.revokeObjectURL(target.preview);
-
-      const remaining = prev.newImages.filter((_, i) => i !== index);
-      if (!remaining.some((image) => image.isPrimary) && prev.existingImages.length > 0) {
-        return {
-          ...prev,
-          newImages: remaining.map((image) => ({ ...image, isPrimary: false })),
-          existingImages: prev.existingImages.map((image, i) => ({
-            ...image,
-            isPrimary: i === 0,
-          })),
-        };
-      }
-      if (!remaining.some((image) => image.isPrimary) && remaining.length > 0) {
-        remaining[0].isPrimary = true;
-      }
-
-      return { ...prev, newImages: remaining };
     });
   };
 
@@ -243,13 +266,10 @@ export default function Admin() {
       setSaving(false);
       return;
     }
-    if (!payload.existingImages.length && !payload.newImages.length) {
-      setError('Upload at least one product image.');
-      setSaving(false);
-      return;
-    }
-    if (!editingId && !payload.newImages.length) {
-      setError('Upload at least one product image.');
+    const hasShowcase = hasFilledShowcaseSlot(payload.showcaseSlots);
+    const hasLegacyImages = payload.existingImages.length > 0 || payload.newImages.length > 0;
+    if (!hasShowcase && !hasLegacyImages) {
+      setError('Upload at least one image in the showcase sections below.');
       setSaving(false);
       return;
     }
@@ -487,7 +507,7 @@ export default function Admin() {
 
         {showForm && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80">
-            <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto border border-white/10 bg-black p-6">
+            <div className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto border border-white/10 bg-black p-6">
               <button
                 type="button"
                 onClick={closeForm}
@@ -588,105 +608,52 @@ export default function Admin() {
                   <span className="text-sm text-white/80">Featured product</span>
                 </label>
 
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-xs uppercase tracking-wider text-white/50">Product images *</span>
-                    <label className="text-xs uppercase tracking-wider text-white/60 hover:text-white cursor-pointer">
-                      + Upload images
-                      <input
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        className="hidden"
-                        onChange={(e) => {
-                          handleNewImageUpload(e.target.files);
-                          e.target.value = '';
-                        }}
-                      />
-                    </label>
-                  </div>
-
-                  {form.existingImages.length === 0 && form.newImages.length === 0 && (
-                    <label className="flex flex-col items-center justify-center gap-2 border border-dashed border-white/20 px-4 py-8 cursor-pointer hover:border-white/40 transition-colors">
-                      <span className="text-sm text-white/50">Click to upload images</span>
-                      <span className="text-xs text-white/30">JPG, PNG, WEBP</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        className="hidden"
-                        onChange={(e) => {
-                          handleNewImageUpload(e.target.files);
-                          e.target.value = '';
-                        }}
-                      />
-                    </label>
-                  )}
-
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {form.existingImages.map((image) => (
-                      <div key={`existing-${image.id}`} className="relative border border-white/10">
-                        <img
-                          src={image.preview}
-                          alt=""
-                          className="w-full aspect-square object-cover bg-pitty-gray"
-                        />
-                        <div className="absolute inset-x-0 bottom-0 flex gap-1 p-2 bg-black/70">
-                          <button
-                            type="button"
-                            onClick={() => setPrimaryExistingImage(image.id)}
-                            className={`flex-1 px-1 py-1 text-[10px] uppercase tracking-wider border ${
-                              image.isPrimary
-                                ? 'border-white text-white'
-                                : 'border-white/20 text-white/50'
-                            }`}
-                          >
-                            Primary
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => removeExistingImage(image.id)}
-                            className="p-1 text-white/50 hover:text-red-400"
-                            aria-label="Remove image"
-                          >
-                            <X size={14} />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-
-                    {form.newImages.map((image, index) => (
-                      <div key={`new-${image.preview}`} className="relative border border-white/10">
-                        <img
-                          src={image.preview}
-                          alt=""
-                          className="w-full aspect-square object-cover bg-pitty-gray"
-                        />
-                        <div className="absolute inset-x-0 bottom-0 flex gap-1 p-2 bg-black/70">
-                          <button
-                            type="button"
-                            onClick={() => setPrimaryNewImage(index)}
-                            className={`flex-1 px-1 py-1 text-[10px] uppercase tracking-wider border ${
-                              image.isPrimary
-                                ? 'border-white text-white'
-                                : 'border-white/20 text-white/50'
-                            }`}
-                          >
-                            Primary
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => removeNewImage(index)}
-                            className="p-1 text-white/50 hover:text-red-400"
-                            aria-label="Remove image"
-                          >
-                            <X size={14} />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                <div className="space-y-2 border-t border-white/10 pt-5">
+                  <span className="text-xs uppercase tracking-wider text-white/50">
+                    Showcase images (by section) *
+                  </span>
+                  <AdminShowcaseSections
+                    slots={form.showcaseSlots}
+                    primarySlot={form.primaryShowcaseSlot}
+                    onPrimarySlotChange={(slot) =>
+                      setForm((prev) => ({ ...prev, primaryShowcaseSlot: slot }))
+                    }
+                    onUpload={handleShowcaseUpload}
+                    onClear={handleShowcaseClear}
+                  />
                 </div>
+
+                {(form.existingImages.length > 0 || form.newImages.length > 0) && (
+                  <div className="space-y-3 border border-white/10 p-4">
+                    <p className="text-xs uppercase tracking-wider text-white/50">
+                      Legacy catalog images
+                    </p>
+                    <p className="text-[11px] text-white/35">
+                      These images are not assigned to a showcase slot. Re-upload using the sections
+                      above when you can.
+                    </p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      {form.existingImages.map((image) => (
+                        <div key={`existing-${image.id}`} className="relative border border-white/10">
+                          <img
+                            src={image.preview}
+                            alt=""
+                            className="w-full aspect-square object-cover bg-pitty-gray"
+                          />
+                          <div className="absolute inset-x-0 bottom-0 flex gap-1 p-2 bg-black/70">
+                            <button
+                              type="button"
+                              onClick={() => removeExistingImage(image.id)}
+                              className="flex-1 p-1 text-[10px] uppercase text-white/50 hover:text-red-400"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex gap-3 pt-2">
                   <Button type="submit" variant="solid" disabled={saving}>

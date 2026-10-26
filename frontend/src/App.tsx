@@ -15,6 +15,7 @@ import Home from './pages/Home';
 import Journal from './pages/Journal';
 import Login from './pages/Login';
 import ProductDetail from './pages/ProductDetail';
+import ProductShowcase from './pages/ProductShowcase';
 import Register from './pages/Register';
 import Shop from './pages/Shop';
 
@@ -37,6 +38,14 @@ export default function App() {
               element={
                 <Layout>
                   <Shop />
+                </Layout>
+              }
+            />
+            <Route
+              path="/shop/:slug/showcase"
+              element={
+                <Layout>
+                  <ProductShowcase />
                 </Layout>
               }
             />

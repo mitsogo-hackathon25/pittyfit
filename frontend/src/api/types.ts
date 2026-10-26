@@ -27,6 +27,14 @@ export interface ProductImage {
   id: number;
   image: string;
   is_primary: boolean;
+  showcase_slot?: string;
+}
+
+export interface ShowcaseSlotFormState {
+  existingImageId?: number;
+  preview: string | null;
+  pendingFile?: File;
+  clearExisting: boolean;
 }
 
 export interface CartItem {
@@ -101,6 +109,8 @@ export interface AdminProductFormData {
   category: number;
   stock: number;
   featured: boolean;
+  showcaseSlots: Record<string, ShowcaseSlotFormState>;
+  primaryShowcaseSlot: string;
   existingImages: AdminExistingImage[];
   newImages: AdminNewImage[];
   deletedImageIds: number[];

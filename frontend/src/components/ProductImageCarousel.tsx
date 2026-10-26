@@ -16,8 +16,8 @@ export default function ProductImageCarousel({ images, alt }: ProductImageCarous
 
   if (images.length === 0) {
     return (
-      <div className="w-full max-w-[480px] sm:max-w-[560px] mx-auto lg:mx-0">
-        <div className="aspect-square bg-pitty-gray flex items-center justify-center text-white/40 text-sm">
+      <div className="w-full max-w-[280px] sm:max-w-[340px] lg:max-w-[380px] mx-auto lg:mx-0">
+        <div className="aspect-[3/4] bg-pitty-gray flex items-center justify-center text-white/40 text-sm">
           No image available
         </div>
       </div>
@@ -45,9 +45,9 @@ export default function ProductImageCarousel({ images, alt }: ProductImageCarous
   const hasMultiple = images.length > 1;
 
   return (
-    <div className="space-y-3 w-full max-w-[480px] sm:max-w-[560px] mx-auto lg:mx-0">
+    <div className="space-y-3 w-full max-w-[280px] sm:max-w-[340px] lg:max-w-[380px] mx-auto lg:mx-0">
       <div
-        className="relative aspect-square bg-pitty-gray overflow-hidden"
+        className="relative aspect-[3/4] bg-pitty-gray overflow-hidden"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
@@ -60,7 +60,7 @@ export default function ProductImageCarousel({ images, alt }: ProductImageCarous
               key={`${src}-${index}`}
               src={src}
               alt={`${alt} - image ${index + 1}`}
-              className="h-full w-full min-w-full flex-shrink-0 object-cover"
+              className="h-full w-full min-w-full flex-shrink-0 object-contain object-center"
             />
           ))}
         </div>
@@ -108,12 +108,12 @@ export default function ProductImageCarousel({ images, alt }: ProductImageCarous
               key={`thumb-${src}-${index}`}
               type="button"
               onClick={() => setCurrentIndex(index)}
-              className={`flex-shrink-0 w-24 h-24 overflow-hidden border-2 transition-colors ${
+              className={`flex-shrink-0 w-14 sm:w-16 aspect-[3/4] overflow-hidden border-2 transition-colors bg-pitty-gray ${
                 index === currentIndex ? 'border-white' : 'border-white/20 hover:border-white/50'
               }`}
               aria-label={`View image ${index + 1}`}
             >
-              <img src={src} alt="" className="w-full h-full object-cover" />
+              <img src={src} alt="" className="w-full h-full object-contain object-center" />
             </button>
           ))}
         </div>

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import type { Category } from '../api/types';
+import CategoryComingSoon from './CategoryComingSoon';
 
 interface CategoryCardProps {
   category: Category;
@@ -8,11 +9,15 @@ interface CategoryCardProps {
 
 export default function CategoryCard({ category, mobile = false }: CategoryCardProps) {
   const image = `/images/categories/${category.slug}.jpg`;
+  const isEmpty = category.product_count === 0;
 
   return (
     <Link
       to={`/shop?category=${category.slug}`}
-      className="group relative block overflow-hidden bg-[#2b2b2b] aspect-[3/4] sm:aspect-[4/5] lg:aspect-[3/4]"
+      className={`group relative block overflow-hidden bg-[#2b2b2b] aspect-[3/4] sm:aspect-[4/5] lg:aspect-[3/4] ${
+        isEmpty ? 'cursor-default' : ''
+      }`}
+      aria-label={isEmpty ? `${category.name} — coming soon` : `Shop ${category.name}`}
     >
       <div className="absolute inset-0 flex items-center justify-center p-3 sm:p-4 lg:p-5">
         <img
@@ -25,9 +30,17 @@ export default function CategoryCard({ category, mobile = false }: CategoryCardP
 
       <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/85 via-black/40 to-transparent pointer-events-none" />
 
+      {isEmpty && (
+        <CategoryComingSoon categoryName={category.name} categorySlug={category.slug} compact />
+      )}
+
       <div className={`absolute bottom-0 left-0 right-0 px-4 pb-4 sm:px-5 sm:pb-5${mobile ? ' text-center' : ''}`}>
-        <span className="text-[10px] sm:text-[11px] font-semibold tracking-[0.2em] uppercase text-white group-hover:text-white/80 transition-colors">
-          {category.name} →
+        <span
+          className={`text-[10px] sm:text-[11px] font-semibold tracking-[0.2em] uppercase transition-colors ${
+            isEmpty ? 'text-white/70' : 'text-white group-hover:text-white/80'
+          }`}
+        >
+          {isEmpty ? category.name : `${category.name} →`}
         </span>
       </div>
     </Link>

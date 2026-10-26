@@ -7,6 +7,23 @@ import ProductImageCarousel from '../components/ProductImageCarousel';
 import { useCart } from '../context/CartContext';
 
 const SIZES = ['XS', 'S', 'M', 'L', 'XL'];
+const MODEL_SHOWCASE_SLOTS = ['model_0', 'model_1', 'model_2', 'model_3'];
+
+function getProductCarouselImages(product: Product): string[] {
+  if (!product.images?.length) {
+    return product.image ? [product.image] : [];
+  }
+
+  const modelViews = MODEL_SHOWCASE_SLOTS
+    .map((slot) => product.images?.find((img) => img.showcase_slot === slot)?.image)
+    .filter((src): src is string => Boolean(src));
+
+  if (modelViews.length > 0) {
+    return modelViews;
+  }
+
+  return [...new Set(product.images.map((img) => img.image).filter(Boolean))];
+}
 
 export default function ProductDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -45,14 +62,7 @@ export default function ProductDetail() {
     );
   }
 
-  const images = [
-    ...new Set(
-      (product.images?.length
-        ? product.images.map((img) => img.image)
-        : [product.image]
-      ).filter(Boolean),
-    ),
-  ];
+  const images = getProductCarouselImages(product);
 
   return (
     <div className="py-12 sm:py-16 min-h-screen">
@@ -85,6 +95,7 @@ export default function ProductDetail() {
                 {SIZES.map((size) => (
                   <button
                     key={size}
+                    type="button"
                     onClick={() => setSelectedSize(size)}
                     className={`w-12 h-12 text-sm font-medium border transition-colors ${
                       selectedSize === size
@@ -102,6 +113,7 @@ export default function ProductDetail() {
               <p className="text-xs tracking-[0.15em] uppercase text-white/50 mb-3">Quantity</p>
               <div className="flex items-center gap-4">
                 <button
+                  type="button"
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   className="w-10 h-10 border border-white/30 hover:border-white transition-colors"
                 >
@@ -109,6 +121,7 @@ export default function ProductDetail() {
                 </button>
                 <span className="text-lg font-medium w-8 text-center">{quantity}</span>
                 <button
+                  type="button"
                   onClick={() => setQuantity(quantity + 1)}
                   className="w-10 h-10 border border-white/30 hover:border-white transition-colors"
                 >
@@ -117,9 +130,12 @@ export default function ProductDetail() {
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-4">
               <Button onClick={handleAddToCart} variant="solid" disabled={adding}>
                 {adding ? 'Adding...' : 'Add to Cart →'}
+              </Button>
+              <Button to={`/shop/${product.slug}/showcase`} variant="ghost">
+                View Product →
               </Button>
               <Button to="/cart" variant="ghost">
                 View Cart

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { getCategories, getProducts } from '../api/endpoints';
 import type { Category, Product } from '../api/types';
+import CategoryComingSoon from '../components/CategoryComingSoon';
 import ProductCard from '../components/ProductCard';
 
 export default function Shop() {
@@ -27,6 +28,13 @@ export default function Shop() {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [activeCategory, searchQuery]);
+
+  const activeCategoryMeta = categories.find((cat) => cat.slug === activeCategory);
+  const isCategoryEmpty =
+    Boolean(activeCategory) &&
+    !searchQuery &&
+    !loading &&
+    (activeCategoryMeta?.product_count === 0 || products.length === 0);
 
   const setCategory = (slug: string) => {
     const params = new URLSearchParams(searchParams);
@@ -84,6 +92,11 @@ export default function Shop() {
               </div>
             ))}
           </div>
+        ) : isCategoryEmpty && activeCategoryMeta ? (
+          <CategoryComingSoon
+            categoryName={activeCategoryMeta.name}
+            categorySlug={activeCategoryMeta.slug}
+          />
         ) : products.length === 0 ? (
           <p className="text-white/50 text-center py-20">No products found.</p>
         ) : (
