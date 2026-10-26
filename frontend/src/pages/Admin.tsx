@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight, Pencil, Plus, Search, Trash2, X } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import { getApiErrorMessage } from '../api/errors';
 import {
   createAdminProduct,
   deleteAdminProduct,
@@ -284,8 +285,10 @@ export default function Admin() {
       }
       closeForm();
       await loadProducts();
-    } catch {
-      setError('Failed to save product. Check your inputs and try again.');
+    } catch (err) {
+      setError(
+        getApiErrorMessage(err, 'Failed to save product. Check your inputs and try again.'),
+      );
     } finally {
       setSaving(false);
     }

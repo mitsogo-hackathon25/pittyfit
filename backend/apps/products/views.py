@@ -1,5 +1,7 @@
 import json
+import logging
 
+from django.db import IntegrityError, OperationalError
 from django.db.models import Q
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
@@ -16,6 +18,8 @@ from .serializers import (
     ProductWriteSerializer,
 )
 from .showcase_slots import SHOWCASE_SLOT_KEYS
+
+logger = logging.getLogger(__name__)
 
 
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
@@ -184,12 +188,31 @@ class AdminProductViewSet(viewsets.ModelViewSet):
 
         write_serializer = self.get_serializer(data=request.data)
         write_serializer.is_valid(raise_exception=True)
-        product = write_serializer.save()
+        try:
+            product = write_serializer.save()
+        except IntegrityError:
+            return Response(
+                {'slug': ['A product with this slug already exists. Choose a unique slug.']},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         try:
             self._apply_product_images(product, request, require_images=True)
         except serializers.ValidationError as exc:
             product.delete()
             return Response(exc.detail, status=status.HTTP_400_BAD_REQUEST)
+        except (OperationalError, OSError, PermissionError) as exc:
+            logger.exception('Product image save failed on create')
+            product.delete()
+            return Response(
+                {
+                    'images': [
+                        'Could not save images on the server. Run database migrations, '
+                        'ensure the media/ folder is writable, and check upload size limits. '
+                        f'({exc})'
+                    ]
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
         return self._detail_response(product, status.HTTP_201_CREATED)
 
     def update(self, request, *args, **kwargs):
@@ -197,11 +220,29 @@ class AdminProductViewSet(viewsets.ModelViewSet):
         product = self.get_object()
         write_serializer = self.get_serializer(product, data=request.data, partial=partial)
         write_serializer.is_valid(raise_exception=True)
-        product = write_serializer.save()
+        try:
+            product = write_serializer.save()
+        except IntegrityError:
+            return Response(
+                {'slug': ['A product with this slug already exists. Choose a unique slug.']},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         try:
             self._apply_product_images(product, request, require_images=True)
         except serializers.ValidationError as exc:
             return Response(exc.detail, status=status.HTTP_400_BAD_REQUEST)
+        except (OperationalError, OSError, PermissionError) as exc:
+            logger.exception('Product image save failed on update')
+            return Response(
+                {
+                    'images': [
+                        'Could not save images on the server. Run database migrations, '
+                        'ensure the media/ folder is writable, and check upload size limits. '
+                        f'({exc})'
+                    ]
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
         return self._detail_response(product)
 
     def partial_update(self, request, *args, **kwargs):
