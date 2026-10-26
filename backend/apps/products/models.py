@@ -1,5 +1,8 @@
 from django.db import models
+from django.db.models import Q
 from django.utils.text import slugify
+
+from .showcase_slots import SHOWCASE_SLOT_CHOICES
 
 
 class Category(models.Model):
@@ -50,6 +53,21 @@ class ProductImage(models.Model):
     image = models.ImageField(upload_to='products/', blank=True, null=True)
     image_url = models.URLField(blank=True)
     is_primary = models.BooleanField(default=False)
+    showcase_slot = models.CharField(
+        max_length=20,
+        blank=True,
+        choices=SHOWCASE_SLOT_CHOICES,
+        db_index=True,
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['product', 'showcase_slot'],
+                condition=Q(showcase_slot__gt=''),
+                name='unique_product_showcase_slot',
+            ),
+        ]
 
     def __str__(self):
         return f'{self.product.name} image'

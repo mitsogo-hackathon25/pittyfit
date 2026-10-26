@@ -15,6 +15,7 @@ from .serializers import (
     ProductListSerializer,
     ProductWriteSerializer,
 )
+from .showcase_slots import SHOWCASE_SLOT_KEYS
 
 
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
@@ -107,38 +108,57 @@ class AdminProductViewSet(viewsets.ModelViewSet):
         serializer = ProductDetailSerializer(product, context={'request': self.request})
         return Response(serializer.data, status=status_code)
 
-    def _parse_deleted_image_ids(self, request):
-        raw = request.data.get('deleted_image_ids', '[]')
+    def _parse_json_list(self, request, key):
+        raw = request.data.get(key, '[]')
         if isinstance(raw, list):
-            return [int(image_id) for image_id in raw]
+            return raw
         try:
-            return [int(image_id) for image_id in json.loads(raw)]
-        except (json.JSONDecodeError, TypeError, ValueError):
+            return json.loads(raw)
+        except (json.JSONDecodeError, TypeError):
             return []
+
+    def _parse_deleted_image_ids(self, request):
+        return [int(image_id) for image_id in self._parse_json_list(request, 'deleted_image_ids')]
+
+    def _parse_cleared_showcase_slots(self, request):
+        return [slot for slot in self._parse_json_list(request, 'cleared_showcase_slots') if slot in SHOWCASE_SLOT_KEYS]
 
     def _apply_product_images(self, product, request, require_images=False):
         deleted_ids = self._parse_deleted_image_ids(request)
         if deleted_ids:
             product.images.filter(id__in=deleted_ids).delete()
 
+        cleared_slots = self._parse_cleared_showcase_slots(request)
+        if cleared_slots:
+            product.images.filter(showcase_slot__in=cleared_slots).delete()
+
+        for slot in SHOWCASE_SLOT_KEYS:
+            uploaded_file = request.FILES.get(f'showcase_{slot}')
+            if not uploaded_file:
+                continue
+            product.images.filter(showcase_slot=slot).delete()
+            ProductImage.objects.create(
+                product=product,
+                image=uploaded_file,
+                showcase_slot=slot,
+            )
+
         new_files = request.FILES.getlist('new_images')
-        created_images = [
+        for uploaded_file in new_files:
             ProductImage.objects.create(product=product, image=uploaded_file)
-            for uploaded_file in new_files
-        ]
 
         primary_image_id = request.data.get('primary_image_id')
-        primary_new_index = request.data.get('primary_new_image_index')
+        primary_slot = request.data.get('primary_showcase_slot')
 
         if primary_image_id:
             product.images.update(is_primary=False)
             product.images.filter(id=int(primary_image_id)).update(is_primary=True)
-        elif primary_new_index not in (None, '') and created_images:
+        elif primary_slot in SHOWCASE_SLOT_KEYS:
             product.images.update(is_primary=False)
-            index = int(primary_new_index)
-            if 0 <= index < len(created_images):
-                created_images[index].is_primary = True
-                created_images[index].save(update_fields=['is_primary'])
+            product.images.filter(showcase_slot=primary_slot).update(is_primary=True)
+        elif product.images.filter(showcase_slot='model_0').exists():
+            product.images.update(is_primary=False)
+            product.images.filter(showcase_slot='model_0').update(is_primary=True)
 
         if product.images.exists() and not product.images.filter(is_primary=True).exists():
             first_image = product.images.first()
@@ -147,13 +167,18 @@ class AdminProductViewSet(viewsets.ModelViewSet):
 
         if require_images and not product.images.exists():
             raise serializers.ValidationError(
-                {'new_images': 'At least one product image is required.'}
+                {'images': 'Upload at least one product image (catalog or showcase section).'}
             )
 
+    def _has_any_image_upload(self, request):
+        if request.FILES.getlist('new_images'):
+            return True
+        return any(request.FILES.get(f'showcase_{slot}') for slot in SHOWCASE_SLOT_KEYS)
+
     def create(self, request, *args, **kwargs):
-        if not request.FILES.getlist('new_images'):
+        if not self._has_any_image_upload(request):
             return Response(
-                {'new_images': ['At least one image is required.']},
+                {'images': ['Upload at least one image in any showcase section or catalog image.']},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
