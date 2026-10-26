@@ -9,7 +9,7 @@ export interface CompressImageOptions {
 const DEFAULTS: CompressImageOptions = {
   maxWidth: 1600,
   maxHeight: 1600,
-  maxSizeBytes: 750_000,
+  maxSizeBytes: 650_000,
   mimeType: 'image/jpeg',
 };
 
@@ -48,15 +48,32 @@ export async function compressImageFile(
   ctx.drawImage(bitmap, 0, 0, width, height);
   bitmap.close();
 
-  let quality = 0.9;
+  let quality = 0.88;
   let blob = await canvasToBlob(canvas, mimeType!, quality);
 
-  while (blob && blob.size > maxSizeBytes! && quality > 0.45) {
-    quality -= 0.07;
+  while (blob && blob.size > maxSizeBytes! && quality > 0.4) {
+    quality -= 0.06;
     blob = await canvasToBlob(canvas, mimeType!, quality);
   }
 
-  if (!blob || blob.size >= file.size) {
+  if (!blob) {
+    return file;
+  }
+
+  if (blob.size > maxSizeBytes!) {
+    const smaller = document.createElement('canvas');
+    smaller.width = Math.max(1, Math.round(width * 0.82));
+    smaller.height = Math.max(1, Math.round(height * 0.82));
+    const sctx = smaller.getContext('2d');
+    if (sctx) {
+      sctx.fillStyle = '#3a3a3a';
+      sctx.fillRect(0, 0, smaller.width, smaller.height);
+      sctx.drawImage(canvas, 0, 0, smaller.width, smaller.height);
+      blob = await canvasToBlob(smaller, mimeType!, 0.75);
+    }
+  }
+
+  if (!blob || blob.size > maxSizeBytes! * 1.15) {
     return file;
   }
 
@@ -80,13 +97,13 @@ function canvasToBlob(
 /** Match admin showcase specs so uploads stay small on strict VPS/nginx limits. */
 export function compressOptionsForShowcaseSlot(slotKey: string): CompressImageOptions {
   if (slotKey.startsWith('model_')) {
-    return { maxWidth: 1200, maxHeight: 1600, maxSizeBytes: 600_000 };
+    return { maxWidth: 1200, maxHeight: 1600, maxSizeBytes: 550_000 };
   }
   if (slotKey.startsWith('detail_') || slotKey.startsWith('macro_')) {
-    return { maxWidth: 900, maxHeight: 900, maxSizeBytes: 450_000 };
+    return { maxWidth: 900, maxHeight: 900, maxSizeBytes: 400_000 };
   }
   if (slotKey.startsWith('flat_')) {
-    return { maxWidth: 1000, maxHeight: 1250, maxSizeBytes: 550_000 };
+    return { maxWidth: 1000, maxHeight: 1250, maxSizeBytes: 500_000 };
   }
   return DEFAULTS;
 }

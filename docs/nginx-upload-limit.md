@@ -1,6 +1,8 @@
 # Fix “Upload too large” (HTTP 413) on VPS
 
-Product admin uploads several images in **one** request. Nginx’s default limit is **1MB**, which triggers **413** before Django receives the files.
+**HTTP 413** means the reverse proxy (Nginx) rejected the request because the body was larger than `client_max_body_size` (often **1MB** by default). Django never sees the upload.
+
+The admin UI compresses images and sends **one image per API request**, but each file can still be ~0.5–1MB, and an old deployed build may still send everything in a single multipart body (~50MB for 10×5MB files).
 
 ## 1. Raise Nginx `client_max_body_size`
 

@@ -7,6 +7,7 @@ import type {
   Order,
   PaginatedResponse,
   Product,
+  ShowcaseSlotFormState,
   Testimonial,
   User,
 } from './types';
@@ -82,7 +83,14 @@ export const getAdminProducts = (params?: {
 }) =>
   client.get<PaginatedResponse<Product>>('/admin/products/', { params }).then((r) => r.data);
 
-function buildAdminProductFormData(data: AdminProductFormData): FormData {
+type BuildFormOptions = {
+  /** Do not attach any showcase image files (metadata-only save). */
+  skipShowcaseUploads?: boolean;
+  /** Only attach this showcase slot file (single-image request for VPS/nginx limits). */
+  onlyShowcaseSlot?: string;
+};
+
+function buildAdminProductFormData(data: AdminProductFormData, options: BuildFormOptions = {}): FormData {
   const formData = new FormData();
   formData.append('name', data.name);
   if (data.slug) formData.append('slug', data.slug);
@@ -98,11 +106,13 @@ function buildAdminProductFormData(data: AdminProductFormData): FormData {
     .map(([key]) => key);
   formData.append('cleared_showcase_slots', JSON.stringify(clearedSlots));
 
-  Object.entries(data.showcaseSlots).forEach(([slotKey, slot]) => {
-    if (slot.pendingFile) {
+  if (!options.skipShowcaseUploads) {
+    Object.entries(data.showcaseSlots).forEach(([slotKey, slot]) => {
+      if (!slot.pendingFile) return;
+      if (options.onlyShowcaseSlot && options.onlyShowcaseSlot !== slotKey) return;
       formData.append(`showcase_${slotKey}`, slot.pendingFile);
-    }
-  });
+    });
+  }
 
   if (data.primaryShowcaseSlot) {
     formData.append('primary_showcase_slot', data.primaryShowcaseSlot);
@@ -117,22 +127,90 @@ function buildAdminProductFormData(data: AdminProductFormData): FormData {
     formData.append('primary_new_image_index', String(primaryNewIndex));
   }
 
-  data.newImages.forEach((image) => {
-    formData.append('new_images', image.file);
-  });
+  if (!options.onlyShowcaseSlot) {
+    data.newImages.forEach((image) => {
+      formData.append('new_images', image.file);
+    });
+  }
 
   return formData;
 }
 
-export const createAdminProduct = (data: AdminProductFormData) =>
+function getPendingShowcaseEntries(
+  data: AdminProductFormData,
+): [string, ShowcaseSlotFormState][] {
+  return Object.entries(data.showcaseSlots).filter(([, slot]) => Boolean(slot.pendingFile));
+}
+
+export const createAdminProduct = (data: AdminProductFormData, options?: BuildFormOptions) =>
   client
-    .post<Product>('/admin/products/', buildAdminProductFormData(data))
+    .post<Product>('/admin/products/', buildAdminProductFormData(data, options))
     .then((r) => r.data);
 
-export const updateAdminProduct = (id: number, data: AdminProductFormData) =>
+export const updateAdminProduct = (
+  id: number,
+  data: AdminProductFormData,
+  options?: BuildFormOptions,
+) =>
   client
-    .patch<Product>(`/admin/products/${id}/`, buildAdminProductFormData(data))
+    .patch<Product>(`/admin/products/${id}/`, buildAdminProductFormData(data, options))
     .then((r) => r.data);
+
+export async function uploadAdminProductShowcaseSlot(
+  productId: number,
+  data: AdminProductFormData,
+  slotKey: string,
+): Promise<Product> {
+  return updateAdminProduct(productId, data, { onlyShowcaseSlot: slotKey, skipShowcaseUploads: false });
+}
+
+/**
+ * Saves product metadata once, then uploads each new showcase image in its own request
+ * so large multi-image saves work even when nginx client_max_body_size is ~1MB.
+ */
+export async function saveAdminProduct(
+  data: AdminProductFormData,
+  editingId: number | null,
+  onProgress?: (current: number, total: number) => void,
+): Promise<Product> {
+  const pending = getPendingShowcaseEntries(data);
+  const totalUploads = pending.length;
+  let uploadIndex = 0;
+
+  const report = () => {
+    if (onProgress && totalUploads > 0) {
+      onProgress(uploadIndex, totalUploads);
+    }
+  };
+
+  if (editingId) {
+    let product = await updateAdminProduct(editingId, data, { skipShowcaseUploads: true });
+    for (const [slotKey] of pending) {
+      uploadIndex += 1;
+      report();
+      product = await uploadAdminProductShowcaseSlot(editingId, data, slotKey);
+    }
+    return product;
+  }
+
+  if (pending.length === 0) {
+    return createAdminProduct(data);
+  }
+
+  const [firstSlot] = pending[0];
+  uploadIndex = 1;
+  report();
+  let product = await createAdminProduct(data, { onlyShowcaseSlot: firstSlot });
+
+  for (let i = 1; i < pending.length; i++) {
+    const [slotKey] = pending[i];
+    uploadIndex = i + 1;
+    report();
+    product = await uploadAdminProductShowcaseSlot(product.id, data, slotKey);
+  }
+
+  return product;
+}
 
 export const deleteAdminProduct = (id: number) =>
   client.delete(`/admin/products/${id}/`);

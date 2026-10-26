@@ -2,11 +2,10 @@ import { ChevronLeft, ChevronRight, Pencil, Plus, Search, Trash2, X } from 'luci
 import { useCallback, useEffect, useState } from 'react';
 import { getApiErrorMessage } from '../api/errors';
 import {
-  createAdminProduct,
   deleteAdminProduct,
   getAdminProducts,
   getCategories,
-  updateAdminProduct,
+  saveAdminProduct,
 } from '../api/endpoints';
 import type { AdminProductFormData, Category, Product, ShowcaseSlotFormState } from '../api/types';
 import AdminShowcaseSections from '../components/AdminShowcaseSections';
@@ -212,6 +211,12 @@ export default function Admin() {
     setError('');
     try {
       const compressed = await compressImageFile(file, compressOptionsForShowcaseSlot(slotKey));
+      if (compressed.size > 900_000) {
+        setError(
+          `Image is still ${(compressed.size / 1_000_000).toFixed(1)}MB after compression. Use a smaller source file, or raise nginx client_max_body_size on the VPS.`,
+        );
+        return;
+      }
       applyShowcaseFile(slotKey, compressed);
     } catch {
       setError('Could not process that image. Try another JPG or PNG.');
@@ -297,18 +302,6 @@ export default function Admin() {
       return;
     }
 
-    const pendingBytes = Object.values(payload.showcaseSlots).reduce(
-      (sum, slot) => sum + (slot.pendingFile?.size ?? 0),
-      0,
-    );
-    if (pendingBytes > 2_500_000) {
-      setError(
-        'Total upload is still over 2.5MB after compression. Save one section at a time (model → save → edit → detail → save), or raise nginx client_max_body_size to 50M on the VPS.',
-      );
-      setSaving(false);
-      return;
-    }
-
     if (!payload.name.trim()) {
       setError('Product name is required.');
       setSaving(false);
@@ -328,13 +321,17 @@ export default function Admin() {
     }
 
     try {
-      if (editingId) {
-        await updateAdminProduct(editingId, payload);
-        setSuccess('Product updated successfully.');
-      } else {
-        await createAdminProduct(payload);
-        setSuccess('Product created successfully.');
-      }
+      const pendingCount = Object.values(payload.showcaseSlots).filter((s) => s.pendingFile).length;
+      await saveAdminProduct(payload, editingId, (current, total) => {
+        if (total > 1) {
+          setSuccess(`Uploading images… ${current} of ${total}`);
+        }
+      });
+      setSuccess(
+        pendingCount > 1
+          ? `Product saved (${pendingCount} images uploaded).`
+          : 'Product saved successfully.',
+      );
       closeForm();
       await loadProducts();
     } catch (err) {
