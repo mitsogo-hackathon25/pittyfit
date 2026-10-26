@@ -9,8 +9,9 @@ import {
 interface AdminShowcaseSectionsProps {
   slots: Record<string, ShowcaseSlotFormState>;
   primarySlot: string;
+  compressingSlot: string | null;
   onPrimarySlotChange: (slot: string) => void;
-  onUpload: (slotKey: string, file: File) => void;
+  onUpload: (slotKey: string, file: File) => void | Promise<void>;
   onClear: (slotKey: string) => void;
 }
 
@@ -24,7 +25,10 @@ function ImageSpecNote({ pixels, ratio, hint }: { pixels: string; ratio: string;
         <span>{ratio}</span>
       </p>
       <p className="text-[10px] text-white/40 leading-snug">{hint}</p>
-      <p className="text-[9px] text-white/30">Format: JPG or PNG · Use the same ratio when cropping.</p>
+      <p className="text-[9px] text-white/30">
+        Format: JPG or PNG · Use the same ratio when cropping. Keep each file under ~500 KB when
+        possible (compress before upload) to avoid server size limits.
+      </p>
     </div>
   );
 }
@@ -32,6 +36,7 @@ function ImageSpecNote({ pixels, ratio, hint }: { pixels: string; ratio: string;
 export default function AdminShowcaseSections({
   slots,
   primarySlot,
+  compressingSlot,
   onPrimarySlotChange,
   onUpload,
   onClear,
@@ -85,6 +90,7 @@ export default function AdminShowcaseSections({
               const state = slots[slot.key];
               const showPreview = state?.preview && !state.clearExisting;
               const aspectClass = showcaseSlotAspectClass(section.id);
+              const isCompressing = compressingSlot === slot.key;
 
               return (
                 <div key={slot.key} className="border border-white/10 bg-white/[0.02]">
@@ -110,9 +116,13 @@ export default function AdminShowcaseSections({
                     </div>
                   ) : (
                     <label
-                      className={`flex flex-col items-center justify-center gap-1 ${aspectClass} cursor-pointer hover:bg-white/[0.03] transition-colors px-2 text-center`}
+                      className={`flex flex-col items-center justify-center gap-1 ${aspectClass} cursor-pointer hover:bg-white/[0.03] transition-colors px-2 text-center ${
+                        isCompressing ? 'pointer-events-none opacity-60' : ''
+                      }`}
                     >
-                      <span className="text-[10px] text-white/40">Upload</span>
+                      <span className="text-[10px] text-white/40">
+                        {isCompressing ? 'Compressing…' : 'Upload'}
+                      </span>
                       <span className="text-[8px] text-white/25 leading-tight">
                         {section.imageSpec.pixels}
                       </span>
@@ -120,9 +130,10 @@ export default function AdminShowcaseSections({
                         type="file"
                         accept="image/*"
                         className="hidden"
+                        disabled={isCompressing}
                         onChange={(e) => {
                           const file = e.target.files?.[0];
-                          if (file) onUpload(slot.key, file);
+                          if (file) void onUpload(slot.key, file);
                           e.target.value = '';
                         }}
                       />

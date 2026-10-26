@@ -12,6 +12,7 @@ import type { AdminProductFormData, Category, Product, ShowcaseSlotFormState } f
 import AdminShowcaseSections from '../components/AdminShowcaseSections';
 import Button from '../components/Button';
 import { createEmptyShowcaseSlotState } from '../constants/showcaseSlots';
+import { compressImageFile, compressOptionsForShowcaseSlot } from '../utils/compressImage';
 
 const ADMIN_PAGE_SIZE = 25;
 
@@ -66,6 +67,7 @@ export default function Admin() {
   const [form, setForm] = useState<AdminProductFormData>(() => createEmptyForm());
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [compressingSlot, setCompressingSlot] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setSearch(searchInput.trim()), 400);
@@ -175,7 +177,7 @@ export default function Admin() {
     setShowForm(true);
   };
 
-  const handleShowcaseUpload = (slotKey: string, file: File) => {
+  const applyShowcaseFile = (slotKey: string, file: File) => {
     setForm((prev) => {
       const current = prev.showcaseSlots[slotKey];
       if (current?.preview?.startsWith('blob:')) {
@@ -204,6 +206,36 @@ export default function Admin() {
       };
     });
   };
+
+  const handleShowcaseUpload = async (slotKey: string, file: File) => {
+    setCompressingSlot(slotKey);
+    setError('');
+    try {
+      const compressed = await compressImageFile(file, compressOptionsForShowcaseSlot(slotKey));
+      applyShowcaseFile(slotKey, compressed);
+    } catch {
+      setError('Could not process that image. Try another JPG or PNG.');
+    } finally {
+      setCompressingSlot(null);
+    }
+  };
+
+  async function compressPendingShowcaseFiles(
+    data: AdminProductFormData,
+  ): Promise<AdminProductFormData> {
+    const showcaseSlots = { ...data.showcaseSlots };
+    for (const [slotKey, slot] of Object.entries(showcaseSlots)) {
+      if (!slot.pendingFile) continue;
+      showcaseSlots[slotKey] = {
+        ...slot,
+        pendingFile: await compressImageFile(
+          slot.pendingFile,
+          compressOptionsForShowcaseSlot(slotKey),
+        ),
+      };
+    }
+    return { ...data, showcaseSlots };
+  }
 
   const handleShowcaseClear = (slotKey: string) => {
     setForm((prev) => {
@@ -252,10 +284,30 @@ export default function Admin() {
     setError('');
     setSuccess('');
 
-    const payload: AdminProductFormData = {
+    let payload: AdminProductFormData = {
       ...form,
       price: Number(form.price),
     };
+
+    try {
+      payload = await compressPendingShowcaseFiles(payload);
+    } catch {
+      setError('Could not prepare images for upload. Try smaller files.');
+      setSaving(false);
+      return;
+    }
+
+    const pendingBytes = Object.values(payload.showcaseSlots).reduce(
+      (sum, slot) => sum + (slot.pendingFile?.size ?? 0),
+      0,
+    );
+    if (pendingBytes > 2_500_000) {
+      setError(
+        'Total upload is still over 2.5MB after compression. Save one section at a time (model → save → edit → detail → save), or raise nginx client_max_body_size to 50M on the VPS.',
+      );
+      setSaving(false);
+      return;
+    }
 
     if (!payload.name.trim()) {
       setError('Product name is required.');
@@ -618,6 +670,7 @@ export default function Admin() {
                   <AdminShowcaseSections
                     slots={form.showcaseSlots}
                     primarySlot={form.primaryShowcaseSlot}
+                    compressingSlot={compressingSlot}
                     onPrimarySlotChange={(slot) =>
                       setForm((prev) => ({ ...prev, primaryShowcaseSlot: slot }))
                     }

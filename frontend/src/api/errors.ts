@@ -27,7 +27,11 @@ export function getApiErrorMessage(error: unknown, fallback: string): string {
     return 'Admin access required. Use a staff/superuser account.';
   }
   if (status === 413) {
-    return 'Upload too large for the server. Try smaller images or raise nginx client_max_body_size.';
+    return (
+      'Upload blocked by the server (HTTP 413). Nginx still limits request size (often 1MB). ' +
+      'On the VPS, set client_max_body_size 50M; in the server block and in location /api/, then sudo nginx -t && sudo systemctl reload nginx. ' +
+      'Images are auto-compressed in admin; save one section at a time if needed.'
+    );
   }
   if (typeof data === 'string' && data.trim()) {
     return data;
