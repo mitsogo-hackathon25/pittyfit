@@ -1,51 +1,108 @@
+import type { ReactNode } from 'react';
 import Button from '../components/Button';
 
-const ABOUT_IMAGE =
-  'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1200&h=800&fit=crop';
+function AboutSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="border-t border-white/10 pt-12 sm:pt-16 first:border-t-0 first:pt-0">
+      <h2 className="text-lg sm:text-xl font-black uppercase tracking-[0.12em] mb-8 sm:mb-10">
+        {title}
+      </h2>
+      <div className="space-y-6 text-white/70 leading-relaxed text-[15px] sm:text-base">
+        {children}
+      </div>
+    </section>
+  );
+}
 
 export default function About() {
   return (
     <div className="py-12 sm:py-16 min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-20">
-          <div>
-            <p className="text-xs tracking-[0.3em] uppercase text-white/50 mb-4">Our Story</p>
-            <h1 className="text-4xl sm:text-5xl font-black uppercase tracking-tight mb-6">
-              Built by Women,<br />For Women
-            </h1>
-            <p className="text-white/60 leading-relaxed mb-6">
-              PITTY FIT was born in the gym — forged through sweat, discipline, and an
-              unwavering commitment to excellence. We believe that what you wear should
-              match the intensity you bring to every workout.
-            </p>
-            <p className="text-white/60 leading-relaxed mb-8">
-              Our mission is simple: create premium activewear that empowers women to
-              show up, push harder, and become the strongest version of themselves.
-              Discipline and consistency aren&apos;t just our tagline — they&apos;re our way of life.
-            </p>
-            <Button to="/shop" variant="ghost">Shop Now →</Button>
-          </div>
-          <div className="aspect-[4/3] overflow-hidden">
-            <img
-              src={ABOUT_IMAGE}
-              alt="Gym training"
-              className="w-full h-full object-cover"
-            />
-          </div>
-        </div>
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <header className="mb-14 sm:mb-16 text-center sm:text-left">
+          <p className="text-xs tracking-[0.3em] uppercase text-white/50 mb-4">
+            Built for more
+          </p>
+          <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight mb-5">
+            Built for More.
+          </h1>
+          <p className="text-white/60 text-[15px] sm:text-base leading-relaxed">
+            Built by gym rats. Made for real life. Driven by purpose.
+          </p>
+        </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-          {[
-            { number: '10K+', label: 'Happy Customers' },
-            { number: '50+', label: 'Products' },
-            { number: '100%', label: 'Women Owned' },
-          ].map((stat) => (
-            <div key={stat.label} className="border border-white/10 py-10 px-6">
-              <p className="text-4xl font-black mb-2">{stat.number}</p>
-              <p className="text-xs tracking-[0.2em] uppercase text-white/50">{stat.label}</p>
-            </div>
-          ))}
-        </div>
+        <AboutSection title="Our Story">
+          <p>
+            We&apos;re not professional athletes, celebrities, or people who have it all figured
+            out.{' '}
+            <strong className="font-semibold text-white/90">
+              We&apos;re normal people who love the gym, believe in hard work, and show up every
+              day to become a better version of ourselves.
+            </strong>
+          </p>
+          <p>
+            We know what it&apos;s like to push through a tough workout, chase a goal, start over
+            after a setback, and keep going even when nobody is watching. Fitness isn&apos;t just
+            something we do — it&apos;s part of who we are.
+          </p>
+          <p>
+            That&apos;s why we created <strong className="font-semibold text-white/90">PITTY FIT</strong>.
+          </p>
+          <p>
+            We wanted to build a fitness apparel brand that represents real people and real
+            dedication. Clothing that looks great, feels great, and moves with you — whether
+            you&apos;re lifting heavy, hitting cardio, or simply working toward becoming stronger,
+            inside and out.
+          </p>
+          <p>You don&apos;t have to be perfect to belong here. You just have to show up.</p>
+        </AboutSection>
+
+        <AboutSection title="More Than a Fitness Brand">
+          <p>
+            At PITTY FIT, we believe strength means more than what you can lift. It&apos;s also
+            about having a heart, standing for something, and making a difference wherever you
+            can.
+          </p>
+          <p>
+            Animals hold a special place in our hearts. They give unconditional love, trust us to
+            protect them, and deserve a chance at a safe and loving life.
+          </p>
+          <p>
+            That&apos;s why{' '}
+            <strong className="font-semibold text-white/90">
+              10% of our profits will be donated to local animal shelters
+            </strong>{' '}
+            to help support the animals who need it most.
+          </p>
+          <p>
+            Every purchase helps us grow our brand and contribute to a cause that means something
+            to us. When you support PITTY FIT, you&apos;re supporting more than fitness — you&apos;re
+            helping us give back.
+          </p>
+        </AboutSection>
+
+        <AboutSection title="Real People. Real Work. Real Purpose.">
+          <p>
+            We&apos;re gym rats. We&apos;re animal lovers. We&apos;re everyday people chasing
+            something better.
+          </p>
+          <p>
+            We believe in discipline, consistency, and never giving up on yourself — and we believe
+            in showing up for the people, animals, and communities we care about.
+          </p>
+        </AboutSection>
+
+        <section className="border-t border-white/10 pt-12 sm:pt-16 mt-12 sm:mt-16 text-center">
+          <h2 className="text-lg sm:text-xl font-black uppercase tracking-[0.12em] mb-8">
+            Welcome to the PITTY FIT Family.
+          </h2>
+          <Button to="/shop" variant="ghost">Shop Now →</Button>
+        </section>
       </div>
     </div>
   );
