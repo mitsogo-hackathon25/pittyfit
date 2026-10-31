@@ -12,7 +12,6 @@ import CheckoutSuccess from './pages/CheckoutSuccess';
 import Contact from './pages/Contact';
 import Admin from './pages/Admin';
 import Home from './pages/Home';
-import Journal from './pages/Journal';
 import Login from './pages/Login';
 import ProductDetail from './pages/ProductDetail';
 import ProductShowcase from './pages/ProductShowcase';
@@ -86,14 +85,6 @@ export default function App() {
               element={
                 <Layout>
                   <About />
-                </Layout>
-              }
-            />
-            <Route
-              path="/journal"
-              element={
-                <Layout>
-                  <Journal />
                 </Layout>
               }
             />

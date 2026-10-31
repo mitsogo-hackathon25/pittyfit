@@ -13,6 +13,11 @@ export default function Contact() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const subject = encodeURIComponent(`PITTY FIT contact from ${form.name}`);
+    const body = encodeURIComponent(
+      `Name: ${form.name}\nEmail: ${form.email}\n\n${form.message}`,
+    );
+    window.location.href = `mailto:donald@pitty.fit?subject=${subject}&body=${body}`;
     setSubmitted(true);
   };
 
@@ -80,19 +85,20 @@ export default function Contact() {
           </form>
         )}
 
-        <div className="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-8 text-center">
-          {[
-            { label: 'Email', value: 'hello@pittyfit.com' },
-            { label: 'Phone', value: '+1 (555) 123-4567' },
-            { label: 'Hours', value: 'Mon–Fri 9am–6pm' },
-          ].map((item) => (
-            <div key={item.label}>
-              <p className="text-xs tracking-[0.15em] uppercase text-white/40 mb-2">
-                {item.label}
-              </p>
-              <p className="text-sm">{item.value}</p>
-            </div>
-          ))}
+        <div className="mt-16 grid grid-cols-1 sm:grid-cols-2 gap-8 text-center sm:text-left max-w-md mx-auto sm:mx-0">
+          <div>
+            <p className="text-xs tracking-[0.15em] uppercase text-white/40 mb-2">Email</p>
+            <p className="text-sm">donald@pitty.fit</p>
+          </div>
+          <div>
+            <p className="text-xs tracking-[0.15em] uppercase text-white/40 mb-2">Phone</p>
+            <a
+              href="tel:+12395225528"
+              className="text-sm hover:text-pitty-gold transition-colors"
+            >
+              +1 (239) 522-5528
+            </a>
+          </div>
         </div>
       </div>
     </div>

@@ -6,7 +6,6 @@ import Logo from './Logo';
 const FOOTER_LINKS = [
   { label: 'SHOP', to: '/shop' },
   { label: 'ABOUT', to: '/about' },
-  { label: 'JOURNAL', to: '/journal' },
   { label: 'CONTACT', to: '/contact' },
 ];
 
